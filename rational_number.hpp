@@ -3,6 +3,8 @@
 #include <concepts>
 #include <numeric>
 #include <type_traits>
+#include <iostream>
+#include <iomanip>
 
 namespace water {
 	namespace rational_number {
@@ -36,40 +38,73 @@ namespace water {
 			Integral m_numerator;
 			Unsigned_Integral m_denominator;
 		};
+		auto& operator<<(std::ostream& out, const water::rational_number::concept_helper::rational_number auto& q) {
+			if (q.denominator() == 1) {
+				return out << q.numerator();
+			}
+			else {
+				return out << "(" << q.numerator() << "/" << q.denominator() << ")";
+			}
+		}
+		auto normalize(concept_helper::rational_number auto&& num) {
+			auto res = num;
+			auto d = num.numerator();
+			d = std::gcd(num.denominator(), num.numerator());
+			res.numerator() /= d;
+			res.denominator() /= d;
+			return res;
+		}
 		auto operator+(concept_helper::rational_number auto&& lhs,
 			concept_helper::rational_number auto&& rhs) {
 			auto res = lhs;
 			res.numerator() = lhs.numerator() * rhs.denominator() + lhs.denominator() * rhs.numerator();
 			res.denominator() = lhs.denominator() * rhs.denominator();
-			return res;
+			return normalize(res);
 		}
 		auto operator-(concept_helper::rational_number auto&& lhs,
 			concept_helper::rational_number auto&& rhs) {
 			auto res = lhs;
 			res.numerator() = lhs.numerator() * rhs.denominator() - lhs.denominator() * rhs.numerator();
 			res.denominator() = lhs.denominator() * rhs.denominator();
-			return res;
+			return normalize(res);
 		}
 		auto operator*(concept_helper::rational_number auto&& lhs,
 			concept_helper::rational_number auto&& rhs) {
 			auto res = lhs;
 			res.numerator() *= rhs.numerator();
 			res.denominator() *= rhs.denominator();
-			return res;
-		}
-		auto normalize(concept_helper::rational_number auto&& num) {
-			auto res = num;
-			auto d = std::gcd(num.denominator(), num.numerator());
-			res.numerator() /= d;
-			res.denominator() /= d;
-			return res;
+			return normalize(res);
 		}
 		auto operator/(concept_helper::rational_number auto&& lhs,
 			concept_helper::rational_number auto&& rhs) {
 			auto res = lhs;
 			res.numerator() *= rhs.denominator();
 			res.denominator() *= rhs.numerator();
-			return res;
+			return normalize(res);
+		}
+		auto operator==(concept_helper::rational_number auto&& lhs,
+			concept_helper::rational_number auto&& rhs) {
+			return lhs.numerator() * rhs.denominator() == rhs.numerator() * lhs.denominator();
+		}
+		auto operator==(concept_helper::rational_number auto&& lhs, std::integral auto&& rhs) {
+			return lhs.numerator() == rhs * lhs.denominator();
+		}
+		auto operator/(std::integral auto&& lhs, concept_helper::rational_number auto&& rhs) {
+			std::remove_cvref_t<decltype(rhs)> res{};
+			res.numerator() = lhs*rhs.denominator();
+			res.denominator() = rhs.numerator();
+			return normalize(res);
+		}
+		auto& operator*=(concept_helper::rational_number auto&& lhs, concept_helper::rational_number auto&& rhs) {
+			lhs.numerator() *= rhs.numerator();
+			lhs.denominator() *= rhs.denominator();
+			lhs = normalize(lhs);
+			return lhs;
+		}
+		auto& operator-=(concept_helper::rational_number auto&& lhs, concept_helper::rational_number auto&& rhs) {
+			lhs = lhs - rhs;
+			lhs = normalize(lhs);
+			return lhs;
 		}
 	}
 }
