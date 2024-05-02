@@ -15,12 +15,12 @@ namespace water {
 				rational_number.denominator();
 			};
 		}
-		template<std::integral Integral, std::unsigned_integral Unsigned_Integral>
+		template<std::integral Numerator, std::integral Denominator>
 		class rational_number {
 		public:
 			rational_number() : m_numerator{ 0 }, m_denominator{ 1 } {}
-			rational_number(Integral n) : m_numerator{ n }, m_denominator{ 1 } {}
-			rational_number(Integral numerator, Unsigned_Integral denominator)
+			rational_number(Numerator n) : m_numerator{ n }, m_denominator{ 1 } {}
+			rational_number(Numerator numerator, Denominator denominator)
 				: m_numerator{ numerator }, m_denominator{ denominator } {}
 			auto& numerator() {
 				return m_numerator;
@@ -35,8 +35,8 @@ namespace water {
 				return m_denominator;
 			}
 		private:
-			Integral m_numerator;
-			Unsigned_Integral m_denominator;
+			Numerator m_numerator;
+			Denominator m_denominator;
 		};
 		auto& operator<<(std::ostream& out, const water::rational_number::concept_helper::rational_number auto& q) {
 			if (q.denominator() == 1) {
@@ -48,8 +48,8 @@ namespace water {
 		}
 		auto normalize(concept_helper::rational_number auto&& num) {
 			auto res = num;
-			auto d = num.numerator();
-			d = std::gcd(num.denominator(), num.numerator());
+			using Numerator = std::remove_cvref_t<decltype(num.numerator())>;
+			Numerator d = std::gcd(num.denominator(), num.numerator());
 			res.numerator() /= d;
 			res.denominator() /= d;
 			return res;
@@ -64,7 +64,8 @@ namespace water {
 		auto operator-(concept_helper::rational_number auto&& lhs,
 			concept_helper::rational_number auto&& rhs) {
 			auto res = lhs;
-			res.numerator() = lhs.numerator() * rhs.denominator() - lhs.denominator() * rhs.numerator();
+			using Numerator = std::remove_cvref_t<decltype(lhs.numerator())>;
+			res.numerator() = lhs.numerator() * static_cast<Numerator>(rhs.denominator()) - static_cast<Numerator>(lhs.denominator()) * rhs.numerator();
 			res.denominator() = lhs.denominator() * rhs.denominator();
 			return normalize(res);
 		}
@@ -78,8 +79,12 @@ namespace water {
 		auto operator/(concept_helper::rational_number auto&& lhs,
 			concept_helper::rational_number auto&& rhs) {
 			auto res = lhs;
-			res.numerator() *= rhs.denominator();
-			res.denominator() *= rhs.numerator();
+			using Numerator = std::remove_cvref_t<decltype(lhs.numerator())>;
+			res.numerator() *= static_cast<Numerator>(rhs.denominator());
+			if (rhs.numerator() < 0) {
+				res.numerator() = - res.numerator();
+			}
+			res.denominator() *= std::abs(rhs.numerator());
 			return normalize(res);
 		}
 		auto operator==(concept_helper::rational_number auto&& lhs,
@@ -92,7 +97,10 @@ namespace water {
 		auto operator/(std::integral auto&& lhs, concept_helper::rational_number auto&& rhs) {
 			std::remove_cvref_t<decltype(rhs)> res{};
 			res.numerator() = lhs*rhs.denominator();
-			res.denominator() = rhs.numerator();
+			if (rhs.numerator() < 0) {
+				res.numerator() = -res.numerator();
+			}
+			res.denominator() = std::abs(rhs.numerator());
 			return normalize(res);
 		}
 		auto& operator*=(concept_helper::rational_number auto&& lhs, concept_helper::rational_number auto&& rhs) {
