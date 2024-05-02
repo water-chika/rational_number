@@ -1,6 +1,8 @@
 #pragma once
 
 #include <concepts>
+#include <numeric>
+#include <type_traits>
 
 namespace water {
 	namespace rational_number {
@@ -11,12 +13,12 @@ namespace water {
 				rational_number.denominator();
 			};
 		}
-		template<std::integral Integral>
+		template<std::integral Integral, std::unsigned_integral Unsigned_Integral>
 		class rational_number {
 		public:
 			rational_number() : m_numerator{ 0 }, m_denominator{ 1 } {}
 			rational_number(Integral n) : m_numerator{ n }, m_denominator{ 1 } {}
-			rational_number(Integral numerator, Integral denominator)
+			rational_number(Integral numerator, Unsigned_Integral denominator)
 				: m_numerator{ numerator }, m_denominator{ denominator } {}
 			auto& numerator() {
 				return m_numerator;
@@ -32,13 +34,41 @@ namespace water {
 			}
 		private:
 			Integral m_numerator;
-			Integral m_denominator;
+			Unsigned_Integral m_denominator;
 		};
 		auto operator+(concept_helper::rational_number auto&& lhs,
 			concept_helper::rational_number auto&& rhs) {
 			auto res = lhs;
 			res.numerator() = lhs.numerator() * rhs.denominator() + lhs.denominator() * rhs.numerator();
 			res.denominator() = lhs.denominator() * rhs.denominator();
+			return res;
+		}
+		auto operator-(concept_helper::rational_number auto&& lhs,
+			concept_helper::rational_number auto&& rhs) {
+			auto res = lhs;
+			res.numerator() = lhs.numerator() * rhs.denominator() - lhs.denominator() * rhs.numerator();
+			res.denominator() = lhs.denominator() * rhs.denominator();
+			return res;
+		}
+		auto operator*(concept_helper::rational_number auto&& lhs,
+			concept_helper::rational_number auto&& rhs) {
+			auto res = lhs;
+			res.numerator() *= rhs.numerator();
+			res.denominator() *= rhs.denominator();
+			return res;
+		}
+		auto normalize(concept_helper::rational_number auto&& num) {
+			auto res = num;
+			auto d = std::gcd(num.denominator(), num.numerator());
+			res.numerator() /= d;
+			res.denominator() /= d;
+			return res;
+		}
+		auto operator/(concept_helper::rational_number auto&& lhs,
+			concept_helper::rational_number auto&& rhs) {
+			auto res = lhs;
+			res.numerator() *= rhs.denominator();
+			res.denominator() *= rhs.numerator();
 			return res;
 		}
 	}
