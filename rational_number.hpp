@@ -21,7 +21,12 @@ namespace water {
 			rational_number() : m_numerator{ 0 }, m_denominator{ 1 } {}
 			rational_number(Numerator n) : m_numerator{ n }, m_denominator{ 1 } {}
 			rational_number(Numerator numerator, Denominator denominator)
-				: m_numerator{ numerator }, m_denominator{ denominator } {}
+				: m_numerator{ numerator }, m_denominator{ denominator } 
+            {
+                Denominator gcd = std::gcd(numerator, denominator);
+                m_numerator /= gcd;
+                m_denominator /= gcd;
+            }
 			auto& numerator() {
 				return m_numerator;
 			}
