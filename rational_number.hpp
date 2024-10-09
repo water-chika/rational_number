@@ -24,8 +24,12 @@ namespace water {
 				: m_numerator{ numerator }, m_denominator{ denominator } 
             {
                 Denominator gcd = std::gcd(numerator, denominator);
-                m_numerator /= gcd;
+                m_numerator /= Numerator{gcd};
                 m_denominator /= gcd;
+            }
+            rational_number(std::floating_point auto f)
+                : rational_number{static_cast<Numerator>(f*1024), 1024}
+            {
             }
 			auto& numerator() {
 				return m_numerator;
@@ -66,6 +70,18 @@ namespace water {
 			res.denominator() = lhs.denominator() * rhs.denominator();
 			return normalize(res);
 		}
+		auto operator+(concept_helper::rational_number auto&& lhs,
+			std::integral auto rhs) {
+			auto res = lhs;
+			res.numerator() = lhs.numerator() + lhs.denominator() * rhs;
+			res.denominator() = lhs.denominator();
+			return normalize(res);
+		}
+        auto& operator+=(concept_helper::rational_number auto& lhs,
+                concept_helper::rational_number auto&& rhs) {
+            lhs = lhs + rhs;
+            return lhs;
+        }
 		auto operator-(concept_helper::rational_number auto&& lhs,
 			concept_helper::rational_number auto&& rhs) {
 			auto res = lhs;
@@ -79,6 +95,12 @@ namespace water {
 			auto res = lhs;
 			res.numerator() *= rhs.numerator();
 			res.denominator() *= rhs.denominator();
+			return normalize(res);
+		}
+		auto operator*(concept_helper::rational_number auto&& lhs,
+			std::integral auto rhs) {
+			auto res = lhs;
+			res.numerator() *= rhs;
 			return normalize(res);
 		}
 		auto operator/(concept_helper::rational_number auto&& lhs,
