@@ -8,6 +8,21 @@
 
 namespace water {
 	namespace rational_number {
+		template<class T>
+		T to_number(std::string str) = delete;
+		template<>
+		int32_t to_number<int32_t>(std::string str) {
+			char* end_p;
+			return strtol(str.c_str(), &end_p, 10);
+		}
+		int32_t pow(int32_t d, int32_t n) {
+			int32_t res = 1;
+			while (n-- > 0) {
+				res *= d;
+			}
+			return res;
+		}
+
 		namespace concept_helper {
 			template<class Rational_Number>
 			concept rational_number = requires (Rational_Number rational_number) {
@@ -31,6 +46,16 @@ namespace water {
                 : rational_number{static_cast<Numerator>(f*1024), 1024}
             {
             }
+			static rational_number from_string(const std::string& str) {
+				auto dot_iter = std::ranges::find(str, '.');
+				std::string_view n_str{ str.begin(), dot_iter};
+				auto n = to_number<Numerator>(std::string{ n_str });
+				if (dot_iter != str.end()) {
+					auto d = to_number<Numerator>(std::string{ dot_iter + 1, str.end() });
+					auto count = str.end() - dot_iter - 1;
+					return rational_number{ n } + rational_number{ d, pow(Denominator{10},count) };
+				}
+			}
 			auto& numerator() {
 				return m_numerator;
 			}
@@ -47,6 +72,7 @@ namespace water {
 			Numerator m_numerator;
 			Denominator m_denominator;
 		};
+
 		auto& operator<<(std::ostream& out, const water::rational_number::concept_helper::rational_number auto& q) {
 			if (q.denominator() == 1) {
 				return out << q.numerator();
