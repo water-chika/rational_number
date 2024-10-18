@@ -55,6 +55,7 @@ namespace water {
 					auto count = str.end() - dot_iter - 1;
 					return rational_number{ n } + rational_number{ d, pow(Denominator{10},count) };
 				}
+				return rational_number{ n };
 			}
 			auto& numerator() {
 				return m_numerator;
